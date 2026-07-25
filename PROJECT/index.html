@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QPDS — Data Intelligence Console</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="grid-glow"></div>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">QD</div>
+    <div>
+      <h2>QPDS</h2>
+      <span>Data Intelligence</span>
+    </div>
+  </div>
+
+  <nav class="nav-stack">
+    <button class="active" data-page="upload" onclick="showPage('upload')">
+      <span class="mod-badge">M1</span> Data Acquisition
+    </button>
+    <button data-page="query" onclick="showPage('query')">
+      <span class="mod-badge">M2</span> Query Engine
+    </button>
+    <button data-page="dashboard" onclick="showPage('dashboard')">
+      <span class="mod-badge">M3</span> Analytics Dashboard
+    </button>
+  </nav>
+
+  <div class="side-status">
+    <span class="live-dot"></span>
+    <div>
+      <strong>Core Online</strong>
+      <small>SQlite database active</small>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div>
+      <span class="eyebrow">Adaptive Data Intelligence Console</span>
+      <h1>QPDS Analytics</h1>
+    </div>
+    <div class="top-chip">SQlite &bull; Live Analytics</div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODULE 1 — DATA ACQUISITION & PREPARATION
+  ═══════════════════════════════════════════════════════ -->
+  <section id="upload" class="page active">
+    <div class="section-head">
+      <div>
+        <span class="module-pill">Module 1</span>
+        <h2>Data Acquisition &amp; Preparation</h2>
+        <p class="module-desc">Upload, validate, clean and prepare your dataset for analysis.</p>
+      </div>
+      <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- Upload + Schema row -->
+    <div class="command-layout">
+      <div class="card upload-card holo-card">
+        <label class="file-drop" for="fileInput">
+          <span class="upload-icon">&#8682;</span>
+          <strong>Choose CSV Dataset</strong>
+          <small>Drop or click to upload — schema and queries adapt automatically</small>
+        </label>
+        <input id="fileInput" type="file" accept=".csv">
+        <div id="uploadStatus" class="status">Upload any CSV file into SQlite</div>
+      </div>
+
+      <div class="card data-preview">
+        <span class="eyebrow">Detected Schema</span>
+        <div id="schemaList">
+          <div class="schema-row"><span>Name</span><strong>Text</strong></div>
+          <div class="schema-row"><span>CGPA</span><strong>Number</strong></div>
+          <div class="schema-row"><span>Attendance</span><strong>Number</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation Summary (shown after upload) -->
+    <div id="validationPanel" class="card validation-panel hidden">
+      <span class="eyebrow">Dataset Validation</span>
+      <div id="validationStats" class="validation-stats"></div>
+    </div>
+
+    <!-- Data Quality Score Card -->
+    <div id="qualityScoreCard" class="card quality-score-card hidden">
+      <div class="quality-score-header">
+        <span class="eyebrow">Overall Data Quality</span>
+        <span id="qualityScoreBadge" class="quality-score-badge">--</span>
+      </div>
+      <div class="quality-score-circle">
+        <svg viewBox="0 0 120 120" class="score-ring">
+          <circle cx="60" cy="60" r="50" class="score-ring-bg" />
+          <circle cx="60" cy="60" r="50" id="scoreRingCircle" class="score-ring-fill" />
+        </svg>
+        <div class="score-center">
+          <div id="qualityScoreNumber" class="score-number">--</div>
+          <div class="score-label">/100</div>
+        </div>
+      </div>
+      <div class="quality-metrics">
+        <div class="metric-item">
+          <span class="metric-label">Completeness</span>
+          <div class="metric-bar"><div id="completenessBar" class="metric-fill" style="width: 0%"></div></div>
+          <span id="completenessValue" class="metric-value">--%</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Consistency</span>
+          <div class="metric-bar"><div id="consistencyBar" class="metric-fill" style="width: 0%"></div></div>
+          <span id="consistencyValue" class="metric-value">--%</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Accuracy</span>
+          <div class="metric-bar"><div id="accuracyBar" class="metric-fill" style="width: 0%"></div></div>
+          <span id="accuracyValue" class="metric-value">--%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column Analysis -->
+    <div id="columnAnalysisCard" class="card column-analysis-card hidden">
+      <span class="eyebrow">Column-Level Analysis</span>
+      <div id="columnAnalysisList" class="column-analysis-list"></div>
+    </div>
+
+    <!-- Validation Issues & Suggestions -->
+    <div id="validationIssuesCard" class="card validation-issues-card hidden">
+      <span class="eyebrow">Data Quality Issues & Recommendations</span>
+      <div id="validationIssuesList" class="validation-issues-list"></div>
+    </div>
+
+    <!-- Data Quality — Missing Values (only shown when issues detected) -->
+    <div id="missingPanel" class="card quality-section hidden">
+      <div class="quality-header">
+        <span class="quality-icon warn">&#9888;</span>
+        <div>
+          <strong>Missing Values Detected</strong>
+          <small id="missingSubtitle"></small>
+        </div>
+      </div>
+      <div class="quality-table-wrap">
+        <table class="quality-table">
+          <thead><tr><th>Column</th><th>Missing Count</th><th>% of Rows</th></tr></thead>
+          <tbody id="missingTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Data Quality — Duplicate Records (only shown when issues detected) -->
+    <div id="duplicatePanel" class="card quality-section hidden">
+      <div class="quality-header">
+        <span class="quality-icon error">&#128683;</span>
+        <div>
+          <strong>Duplicate Records Removed</strong>
+          <small id="duplicateSubtitle"></small>
+        </div>
+      </div>
+      <div class="quality-table-wrap">
+        <div id="duplicateTableWrap"></div>
+      </div>
+    </div>
+
+    <!-- Clean Summary -->
+    <div id="cleanSummary" class="card clean-summary hidden">
+      <span class="check-big">&#10003;</span>
+      <div>
+        <strong id="cleanSummaryText">Dataset ready for analysis.</strong>
+        <small id="cleanSummaryDetails"></small>
+      </div>
+      <button onclick="showPage('query')" class="btn-goto">Go to Query Engine &rarr;</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODULE 2 — QUERY ANALYSIS ENGINE
+  ═══════════════════════════════════════════════════════ -->
+  <section id="query" class="page">
+    <div class="section-head">
+      <div>
+        <span class="module-pill m2">Module 2</span>
+        <h2>Query Analysis Engine</h2>
+        <p class="module-desc">Filter, sort, group and aggregate your data using natural language.</p>
+      </div>
+    </div>
+
+    <div class="card query-card">
+      <div class="query-header-badge">
+        <span class="ai-status-badge" id="aiStatusBadge">Checking AI Status...</span>
+      </div>
+      
+      <!-- Query type tabs -->
+      <div class="query-tabs">
+        <button class="tab-btn active" data-tab="all" onclick="setQueryTab('all')">All</button>
+        <button class="tab-btn" data-tab="filter" onclick="setQueryTab('filter')">Filter</button>
+        <button class="tab-btn" data-tab="sort" onclick="setQueryTab('sort')">Sort</button>
+        <button class="tab-btn" data-tab="group" onclick="setQueryTab('group')">Group</button>
+        <button class="tab-btn" data-tab="aggregate" onclick="setQueryTab('aggregate')">Aggregate</button>
+      </div>
+
+      <form id="queryForm" class="query-form">
+        <input id="q" placeholder="e.g. top 10 students · average CGPA · attendance below 75 · count by department">
+        <button type="submit">Execute</button>
+      </form>
+
+      <div id="queryHints" class="query-hints"></div>
+
+      <div id="queryInsight" class="query-insight hidden"></div>
+
+      <div id="result" class="result-panel"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODULE 3 — ANALYTICS & VISUALIZATION DASHBOARD
+  ═══════════════════════════════════════════════════════ -->
+  <section id="dashboard" class="page">
+    <div class="section-head">
+      <div>
+        <span class="module-pill m3">Module 3</span>
+        <h2>Analytics &amp; Visualization Dashboard</h2>
+        <p class="module-desc">Visual insights — charts and analytics adapt to your dataset.</p>
+      </div>
+      <div id="datasetChip" class="top-chip">SQlite dataset view</div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div id="statsGrid" class="grid stats-grid"></div>
+
+    <!-- Chart Selector Panel -->
+    <div class="card chart-selector-card">
+      <div class="chart-selector-header">
+        <span class="eyebrow">Choose Your Visualizations</span>
+        <span class="selector-badge">Custom</span>
+      </div>
+      <p class="selector-desc">Select one or multiple charts to display. All charts auto-generate from your dataset.</p>
+      
+      <div class="chart-selector-grid">
+        <label class="chart-option" data-chart="bar">
+          <input type="checkbox" checked data-chart-type="bar">
+          <div class="chart-option-content">
+            <div class="chart-icon">📊</div>
+            <div class="chart-info">
+              <strong>Bar Chart</strong>
+              <span>Metric distribution across categories</span>
+            </div>
+          </div>
+        </label>
+
+        <label class="chart-option" data-chart="doughnut">
+          <input type="checkbox" checked data-chart-type="doughnut">
+          <div class="chart-option-content">
+            <div class="chart-icon">🍩</div>
+            <div class="chart-info">
+              <strong>Pie Chart</strong>
+              <span>Category split with proportions</span>
+            </div>
+          </div>
+        </label>
+
+        <label class="chart-option" data-chart="line">
+          <input type="checkbox" checked data-chart-type="line">
+          <div class="chart-option-content">
+            <div class="chart-icon">📈</div>
+            <div class="chart-info">
+              <strong>Line Chart</strong>
+              <span>Trends over index or time</span>
+            </div>
+          </div>
+        </label>
+
+        <label class="chart-option" data-chart="hbar">
+          <input type="checkbox" checked data-chart-type="hbar">
+          <div class="chart-option-content">
+            <div class="chart-icon">📉</div>
+            <div class="chart-info">
+              <strong>Horizontal Bar</strong>
+              <span>Top-N ranking with clear labels</span>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <div class="selector-actions">
+        <button onclick="selectAllCharts()" class="btn-select-all">Select All</button>
+        <button onclick="deselectAllCharts()" class="btn-deselect-all">Clear All</button>
+        <button onclick="applyChartSelection()" class="btn-apply-charts">Apply Selection</button>
+      </div>
+    </div>
+
+    <!-- Active Charts Display -->
+    <div id="chartsDisplay" class="chart-grid-5">
+      <!-- Row 1: Bar + Doughnut -->
+      <div class="card chart-panel chart-tall" id="barWrap">
+        <div id="barTitle" class="panel-title">Metric Distribution</div>
+        <canvas id="barChart"></canvas>
+      </div>
+      <div class="card chart-panel chart-tall" id="doughnutWrap">
+        <div id="doughnutTitle" class="panel-title">Category Split</div>
+        <canvas id="doughnutChart"></canvas>
+      </div>
+
+      <!-- Row 2: Line + Horizontal Bar + Radar -->
+      <div class="card chart-panel chart-medium" id="lineWrap">
+        <div id="lineTitle" class="panel-title">Trend</div>
+        <canvas id="lineChart"></canvas>
+      </div>
+      <div class="card chart-panel chart-medium" id="hbarWrap">
+        <div id="hbarTitle" class="panel-title">Top 10 Ranking</div>
+        <canvas id="hbarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Dataset Insight Report -->
+    <div class="card insight-report" id="insightReport">
+      <div class="insight-report-header">
+        <span class="eyebrow">Auto-Generated Insight Report</span>
+        <span class="insight-badge">AI</span>
+      </div>
+      <ul id="insightList" class="insight-list"></ul>
+    </div>
+
+    <!-- AI-Powered Data Insights -->
+    <div class="card ai-insights-card hidden" id="aiInsightsContainer">
+      <div class="insight-report-header">
+        <span class="eyebrow">AI Data Analysis</span>
+      </div>
+      <!-- Dynamic content inserted by JavaScript -->
+    </div>
+  </section>
+</main>
+
+<script src="script.js"></script>
+<script src="cursor-effects.js"></script>
+</body>
+</html>
